@@ -1,0 +1,26 @@
+# Common files and directories to ignore
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Node.js dependencies
+node_modules/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Log files
+*.log
+
+# Build directories
+build/
+dist/
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# Environment variables
+.env
