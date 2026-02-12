@@ -1,9 +1,45 @@
-# Ubuntu 24.04 RKE2 Security Patching
+# Overview
+This project provides security patching for RKE2 running on Ubuntu 24.04.
 
-Production-grade runbooks, checklists, and helper scripts for safely applying Ubuntu 24.04 LTS security updates to nodes running RKE2 (control-plane/etcd and workers). Built for audited production environments.
+# Features
+- Automated security updates
+- Support for RKE2 configurations
+- Customizable patching workflow
 
-Repo layout:
-- docs/ – strategy, architecture, risk matrix, templates
-- runbooks/ – control-plane, worker, emergency, rollback
-- scripts/ – prechecks, drain, patch, health checks
-- checklists/ – pre/post checklists + audit evidence pack template
+# Quick Start
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/garywh/ubuntu-24.04-rke2-security-patching-v1.git
+   cd ubuntu-24.04-rke2-security-patching-v1
+   ```
+2. Follow the instructions in the installation guide.
+
+# Directory Structure
+```
+ubuntu-24.04-rke2-security-patching-v1/
+│
+├── bin/             # Scripts for patching
+├── configs/         # Configuration files
+└── docs/           # Documentation
+```
+
+# Prerequisites
+- Ubuntu 24.04
+- RKE2 installed
+
+# Workflow
+1. Check for available security patches.
+2. Apply the patches to the RKE2 environment.
+3. Verify successful application.
+
+# Usage Examples
+To manually trigger patching:
+```bash
+./bin/patch.sh
+```
+
+# Support
+For support, please open an issue in this repository.
+
+# Contribution
+Contributions are welcome! Please follow the contributing guidelines.
