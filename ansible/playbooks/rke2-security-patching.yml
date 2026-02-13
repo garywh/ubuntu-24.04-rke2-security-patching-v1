@@ -1,0 +1,71 @@
+---
+- name: Ubuntu 24.04 RKE2 security patching workflow
+  hosts: rke2_cluster
+  become: true
+  serial: "{{ patch_batch_size | default(1) }}"
+  vars:
+    rke2_service_name: "{{ 'rke2-server' if inventory_hostname in groups['rke2_servers'] else 'rke2-agent' }}"
+
+  tasks:
+    - name: Precheck | Gather package facts
+      ansible.builtin.package_facts:
+        manager: auto
+      tags:
+        - precheck
+
+    - name: Precheck | Capture upgradable package list
+      ansible.builtin.shell: apt list --upgradable 2>/dev/null | tail -n +2
+      register: upgradable_packages
+      changed_when: false
+      tags:
+        - precheck
+
+    - name: Precheck | Show pending updates
+      ansible.builtin.debug:
+        msg: "Pending updates on {{ inventory_hostname }}: {{ upgradable_packages.stdout_lines | default([]) }}"
+      tags:
+        - precheck
+
+    - name: Patch | Refresh apt metadata
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      tags:
+        - patch
+
+    - name: Patch | Apply package upgrades
+      ansible.builtin.apt:
+        upgrade: dist
+        autoremove: true
+        autoclean: true
+      tags:
+        - patch
+
+    - name: Patch | Check reboot requirement marker
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+      tags:
+        - patch
+
+    - name: Patch | Reboot when required
+      ansible.builtin.reboot:
+        reboot_timeout: 1800
+        test_command: whoami
+      when: reboot_required.stat.exists
+      tags:
+        - patch
+
+    - name: Verify | Ensure RKE2 service is active
+      ansible.builtin.command: systemctl is-active {{ rke2_service_name }}
+      register: rke2_service_status
+      changed_when: false
+      failed_when: rke2_service_status.stdout.strip() != 'active'
+      tags:
+        - verify
+
+    - name: Verify | Report service state
+      ansible.builtin.debug:
+        msg: "{{ rke2_service_name }} status on {{ inventory_hostname }}: {{ rke2_service_status.stdout.strip() }}"
+      tags:
+        - verify
