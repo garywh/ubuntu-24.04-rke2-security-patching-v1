@@ -86,3 +86,20 @@ See also: `docs/PREREQUISITES.md`.
 ## Contributing
 
 Contributions are welcome. Please review `CONTRIBUTING.md` before submitting changes.
+
+## GitLab CI/CD (Ansible automation)
+
+A GitLab pipeline is included in `.gitlab-ci.yml` to run the patching workflow with Ansible on runners tagged `ansible`.
+
+- **lint**: runs `ansible-lint` and playbook syntax checks.
+- **dry-run**: executes a full `--check --diff` plan for `precheck`, `patch`, and `verify` tags.
+- **patch**: manual production apply job (`precheck,patch`).
+- **verify**: runs verification checks (`verify`) after patching.
+
+### Pipeline inputs
+
+- Inventory: `ansible/inventory/hosts.ini`
+- Playbook: `ansible/playbooks/rke2-security-patching.yml`
+- Optional var: `patch_batch_size` to control rolling concurrency.
+
+Update `ansible/inventory/hosts.ini` with your hostnames/IPs before running non-check-mode jobs.

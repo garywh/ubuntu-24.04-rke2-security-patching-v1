@@ -1,0 +1,49 @@
+stages:
+  - lint
+  - dry-run
+  - patch
+  - verify
+
+default:
+  image: python:3.12-slim
+  tags:
+    - ansible
+  before_script:
+    - python -m pip install --upgrade pip
+    - pip install ansible-core==2.17.6 ansible-lint==24.9.2
+
+variables:
+  ANSIBLE_CONFIG: ansible/ansible.cfg
+  ANSIBLE_FORCE_COLOR: "true"
+  ANSIBLE_HOST_KEY_CHECKING: "false"
+  ANSIBLE_INVENTORY: "ansible/inventory/hosts.ini"
+  ANSIBLE_PLAYBOOK: "ansible/playbooks/rke2-security-patching.yml"
+
+lint:ansible:
+  stage: lint
+  script:
+    - ansible-lint "$ANSIBLE_PLAYBOOK"
+    - ansible-playbook -i "$ANSIBLE_INVENTORY" "$ANSIBLE_PLAYBOOK" --syntax-check
+
+plan:patching:
+  stage: dry-run
+  script:
+    - ansible-playbook -i "$ANSIBLE_INVENTORY" "$ANSIBLE_PLAYBOOK" --tags precheck,patch,verify --check --diff
+
+apply:patching:
+  stage: patch
+  when: manual
+  allow_failure: false
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+  script:
+    - ansible-playbook -i "$ANSIBLE_INVENTORY" "$ANSIBLE_PLAYBOOK" --tags precheck,patch
+
+verify:cluster:
+  stage: verify
+  needs:
+    - job: apply:patching
+      optional: true
+  script:
+    - ansible-playbook -i "$ANSIBLE_INVENTORY" "$ANSIBLE_PLAYBOOK" --tags verify
